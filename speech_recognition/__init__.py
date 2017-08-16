@@ -184,11 +184,13 @@ class AudioFile(AudioSource):
     FLAC files must be in native FLAC format; OGG-FLAC is not supported and may result in undefined behaviour.
     """
 
-    def __init__(self, filename_or_fileobject):
+    def __init__(self, filename_or_fileobject, pos, read_frames):
         assert isinstance(filename_or_fileobject, (type(""), type(u""))) or hasattr(filename_or_fileobject, "read"), "Given audio file must be a filename string or a file-like object"
         self.filename_or_fileobject = filename_or_fileobject
         self.stream = None
         self.DURATION = None
+        self.pos = pos
+        self.read_frames = read_frames
 
         self.audio_reader = None
         self.little_endian = False
@@ -201,6 +203,7 @@ class AudioFile(AudioSource):
         try:
             # attempt to read the file as WAV
             self.audio_reader = wave.open(self.filename_or_fileobject, "rb")
+            self.audio_reader.setpos(self.pos)
             self.little_endian = True  # RIFF WAV is a little-endian format (most ``audioop`` operations assume that the frames are stored in little-endian form)
         except (wave.Error, EOFError):
             try:
@@ -260,13 +263,14 @@ class AudioFile(AudioSource):
         self.DURATION = None
 
     class AudioFileStream(object):
-        def __init__(self, audio_reader, little_endian, samples_24_bit_pretending_to_be_32_bit):
+        def __init__(self, audio_reader, little_endian, read_frames, samples_24_bit_pretending_to_be_32_bit):
             self.audio_reader = audio_reader  # an audio file object (e.g., a `wave.Wave_read` instance)
+            self.read_frames = read_frames
             self.little_endian = little_endian  # whether the audio data is little-endian (when working with big-endian things, we'll have to convert it to little-endian before we process it)
             self.samples_24_bit_pretending_to_be_32_bit = samples_24_bit_pretending_to_be_32_bit  # this is true if the audio is 24-bit audio, but 24-bit audio isn't supported, so we have to pretend that this is 32-bit audio and convert it on the fly
 
         def read(self, size=-1):
-            buffer = self.audio_reader.readframes(self.audio_reader.getnframes() if size == -1 else size)
+            buffer = self.audio_reader.readframes(self.read_frames if size == -1 else size)
             if not isinstance(buffer, bytes): buffer = b""  # workaround for https://bugs.python.org/issue24608
 
             sample_width = self.audio_reader.getsampwidth()
