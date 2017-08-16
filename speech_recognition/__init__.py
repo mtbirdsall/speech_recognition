@@ -253,7 +253,7 @@ class AudioFile(AudioSource):
         self.CHUNK = 4096
         self.FRAME_COUNT = self.audio_reader.getnframes()
         self.DURATION = self.FRAME_COUNT / float(self.SAMPLE_RATE)
-        self.stream = AudioFile.AudioFileStream(self.audio_reader, self.little_endian, samples_24_bit_pretending_to_be_32_bit)
+        self.stream = AudioFile.AudioFileStream(self.audio_reader, self.little_endian, self.read_frames, samples_24_bit_pretending_to_be_32_bit)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
