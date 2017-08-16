@@ -270,7 +270,7 @@ class AudioFile(AudioSource):
             self.samples_24_bit_pretending_to_be_32_bit = samples_24_bit_pretending_to_be_32_bit  # this is true if the audio is 24-bit audio, but 24-bit audio isn't supported, so we have to pretend that this is 32-bit audio and convert it on the fly
 
         def read(self, size=-1):
-            buffer = self.audio_reader.readframes(self.read_frames if size == -1 else size)
+            buffer = self.audio_reader.readframes(self.read_frames)
             if not isinstance(buffer, bytes): buffer = b""  # workaround for https://bugs.python.org/issue24608
 
             sample_width = self.audio_reader.getsampwidth()
